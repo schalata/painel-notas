@@ -104,6 +104,10 @@ df['Cor'] = df['Nota Final'].apply(lambda nota: 'red' if nota < 6 else 'blue')
 st.title("📊 Painel de Desempenho Acadêmico")
 
 st.subheader("📄 Tabela de Notas Finais")
+# Para a tabela começar a contar na linha 1 e não 0
+df= df.reset_index(drop=True)
+df.index = df.index + 1
+
 st.dataframe(df[['Nome', 'Avaliação 01', 'Recuperação 01', 'Nota Final']])
 
 # Ordena o DataFrame por nome
@@ -144,8 +148,12 @@ st.markdown(f"❌ Alunos com nota < 6: **{abaixo_media} ({abaixo_media / total_v
 
 # Ranking
 st.subheader("🏅 Ranking de Notas")
+# Ordenar por nota decrescente
 df_ranking = df_validos.sort_values(by='Nota Final', ascending=False)[['Nome', 'Nota Final']]
-st.dataframe(df_ranking.reset_index(drop=True))
+# Adicionar a coluna 'Posição' iniciando em 1
+df_ranking.insert(0, 'Posição', range(1, len(df_ranking) + 1))
+# st.dataframe(df_ranking.reset_index(drop=True))
+st.dataframe(df_ranking)
 
 # Gráfico 2 - Distribuição de notas
 st.subheader("📊 Distribuição de Notas")
