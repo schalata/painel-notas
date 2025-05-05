@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.title("Ciências de Dados - 2025/1")
+st.title("Estrutura de Dados - 2025/1")
 
 # Importar a base de dados
 dados = pd.read_excel("CST_EDA_2025.xlsx")
