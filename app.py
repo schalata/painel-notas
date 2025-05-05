@@ -5,7 +5,8 @@ import plotly.express as px
 st.title("Estrutura de Dados - 2025/1")
 
 # Importar a base de dados
-dados = pd.read_excel("CST_EDA_2025.xlsx")
+# dados = pd.read_excel("CST_EDA_2025.xlsx")
+dados = pd.read_excel("INF_ALP_2025.xlsx")
 
 # # Criar DataFrame
 # df = pd.DataFrame(dados)
@@ -104,18 +105,22 @@ st.title("📊 Painel de Desempenho Acadêmico")
 st.subheader("📄 Tabela de Notas Finais")
 st.dataframe(df[['Nome', 'Avaliação 01', 'Recuperação 01', 'Nota Final']])
 
-# Gráfico 1 - Nota por aluno
+# Ordena o DataFrame por nome
+df_ordenado = df.sort_values(by='Nome')
+
+# Gráfico 1 - Nota por aluno (com ordem alfabética real)
 st.subheader("📈 Nota Final por Aluno (cores indicam < ou ≥ 6)")
 fig1 = px.bar(
-    df,
+    df_ordenado,
     x='Nome',
     y='Nota Final',
     color='Cor',
     color_discrete_map={'red': 'red', 'blue': 'blue'},
     title='Notas Finais por Estudante',
-    labels={'Nota Final': 'Nota'}
+    labels={'Nota Final': 'Nota'},
+    category_orders={'Nome': df_ordenado['Nome'].tolist()}  # <- Força a ordem alfabética no eixo X
 )
-fig1.update_layout(xaxis_tickangle=-45, yaxis=dict(range=[0, 10]), showlegend=False)
+fig1.update_layout(xaxis_tickangle=-90, yaxis=dict(range=[0, 10]), showlegend=False)
 st.plotly_chart(fig1)
 
 # Estatísticas básicas
