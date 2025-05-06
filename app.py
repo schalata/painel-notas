@@ -3,11 +3,27 @@ import pandas as pd
 import plotly.express as px
 
 # st.title("Estrutura de Dados - 2025/1")
-st.title("Algoritmos e Lógica de Programação - 2025/1")
+st.title("DashBoard - Turmas: 2025/1")
 
-# Importar a base de dados
-# dados = pd.read_excel("CST_EDA_2025.xlsx")
-dados = pd.read_excel("INF_ALP_2025.xlsx")
+# # Importar a base de dados
+# # dados = pd.read_excel("CST_EDA_2025.xlsx")
+# dados = pd.read_excel("INF_ALP_2025.xlsx")
+
+
+# Seleção da turma
+turma_opcao = st.selectbox(
+    "Selecione a turma:",
+    ("CST - Estrutura de Dados", "INFO - Algoritmos e Lógica de Programação")
+)
+
+# Carregar os dados com base na turma selecionada
+if turma_opcao == "CST - Estrutura de Dados":
+    arquivo_excel = "CST_EDA_2025.xlsx"
+else:
+    arquivo_excel = "INF_ALP_2025.xlsx"
+
+# Carregar os dados
+dados = pd.read_excel(arquivo_excel)
 
 # # Criar DataFrame
 # df = pd.DataFrame(dados)
