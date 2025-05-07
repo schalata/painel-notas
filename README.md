@@ -29,8 +29,6 @@ Um painel interativo desenvolvido em **Streamlit** para análise do desempenho a
 
 <img src="images/dashboard.png" alt="Exemplo do painel Streamlit" width="800"/>
 
-> 📁 Coloque a imagem em uma pasta chamada `images` dentro do seu repositório.
-
 ## 📁 Estrutura esperada dos dados
 
 O Excel deve conter as colunas:
