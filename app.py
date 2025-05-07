@@ -1,3 +1,7 @@
+# --------------------------------------------------
+# Painel de Desempenho por Prova - Versão 01
+# --------------------------------------------------
+
 import pandas as pd
 import streamlit as st
 import plotly.express as px
