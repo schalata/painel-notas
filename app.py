@@ -22,6 +22,7 @@ st.sidebar.header("⚙️ Configurações")
 curso_selecionado = st.sidebar.selectbox("Selecione o curso:", list(cursos.keys()))
 ucs_disponiveis = cursos[curso_selecionado]
 uc_selecionada = st.sidebar.selectbox("Selecione a unidade curricular:", list(ucs_disponiveis.keys()))
+uc_selecionada = str(uc_selecionada).strip()
 arquivo_excel = ucs_disponiveis[uc_selecionada]
 
 # -------------------------
