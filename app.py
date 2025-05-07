@@ -1,200 +1,144 @@
-import streamlit as st
 import pandas as pd
+import streamlit as st
 import plotly.express as px
 
-# st.title("Estrutura de Dados - 2025/1")
-st.title("DashBoard - Turmas: 2025/1")
+st.set_page_config(page_title="Painel Acadêmico", layout="wide")
+st.title("📚 Painel de Desempenho por Prova")
 
-# # Importar a base de dados
-# # dados = pd.read_excel("CST_EDA_2025.xlsx")
-# dados = pd.read_excel("INF_ALP_2025.xlsx")
+# Disciplinas disponíveis
+disciplinas = {
+    "Algoritmos e Lógica de Programação": "INF_ALP_2025.xlsx",
+    "Estruturas de Dados": "CST_EDA_2025.xlsx"
+}
 
+# Sidebar de controle
+st.sidebar.header("⚙️ Configurações")
+disciplina_nome = st.sidebar.selectbox("Selecione a disciplina:", list(disciplinas.keys()))
+arquivo_excel = disciplinas[disciplina_nome]
 
-# Seleção da turma
-turma_opcao = st.selectbox(
-    "Selecione a turma:",
-    ("CST - Estrutura de Dados", "INFO - Algoritmos e Lógica de Programação")
-)
+# Carregamento dos dados
+df = pd.read_excel(arquivo_excel)
 
-# Carregar os dados com base na turma selecionada
-if turma_opcao == "CST - Estrutura de Dados":
-    arquivo_excel = "CST_EDA_2025.xlsx"
+# Cálculo das notas finais para cada prova
+for i in range(1, 5):
+    pi = f"0{i}"
+    df[f"Nota Final {pi}"] = df[[f"Avaliação {pi}", f"Recuperação {pi}"]].max(axis=1)
+
+# Seleção da prova e tipo
+prova = st.sidebar.selectbox("Selecione a prova:", ["01", "02", "03", "04"])
+tipo = st.sidebar.radio("Tipo de nota a exibir:", ("Apenas Avaliação", "Apenas Recuperação", "Apenas Nota Final", "Todas"))
+
+# Colunas correspondentes
+col_av = f"Avaliação {prova}"
+col_rec = f"Recuperação {prova}"
+col_final = f"Nota Final {prova}"
+
+# Tabela de notas
+st.subheader("📄 Tabela de Notas")
+colunas_tabela = ['Nome']
+if tipo == "Apenas Avaliação":
+    colunas_tabela.append(col_av)
+elif tipo == "Apenas Recuperação":
+    colunas_tabela.append(col_rec)
+elif tipo == "Apenas Nota Final":
+    colunas_tabela.append(col_final)
 else:
-    arquivo_excel = "INF_ALP_2025.xlsx"
+    colunas_tabela += [col_av, col_rec, col_final]
 
-# Carregar os dados
-dados = pd.read_excel(arquivo_excel)
+df_tabela = df[colunas_tabela].copy()
+df_tabela.index = df_tabela.index + 1
+st.dataframe(df_tabela)
 
-# # Criar DataFrame
-# df = pd.DataFrame(dados)
-#
-# # Converter para float e tratar os None como NaN
-# df['Avaliação 01'] = pd.to_numeric(df['Avaliação 01'], errors='coerce')
-# df['Recuperação 01'] = pd.to_numeric(df['Recuperação 01'], errors='coerce')
-#
-# # Criar nova coluna com a maior nota entre Avaliação 01 e Recuperação 01
-# df['Nota Final'] = df[['Avaliação 01', 'Recuperação 01']].max(axis=1)
-#
-# # Criar coluna de cor: vermelho se < 6, azul se >= 6
-# df['Cor'] = df['Nota Final'].apply(lambda nota: 'red' if nota < 6 else 'blue')
-#
-# # st.dataframe(df)
-#
-# # Título do app
-# st.title("Gráfico de Notas da Avaliação 01")
-#
-# # Exibir tabela
-# st.dataframe(df[['Nome', 'Nota Final']])
-#
-# # Criar gráfico de barras com Plotly
-# fig = px.bar(
-#     df,
-#     x='Nome',
-#     y='Nota Final',
-#     color='Cor',
-#     color_discrete_map={'red': 'red', 'blue': 'blue'},
-#     title='Nota por Estudante',
-#     labels={'Nota Final': 'Nota'}
-# )
-#
-# # Escala fixa e rótulos inclinados
-# fig.update_layout(
-#     xaxis_tickangle=-45,
-#     yaxis=dict(range=[0, 10]),
-#     showlegend=False  # Oculta legenda "Cor"
-# )
-#
-# # Exibir gráfico no Streamlit
-# st.plotly_chart(fig)
-#
-# # Calcular a média e desvio padrão das notas
-# media = df['Nota Final'].mean()
-# desvio = df['Nota Final'].std()
-#
-# # Mostrar métricas
-# st.markdown("### Estatísticas")
-# st.write(f"📊 **Média das notas:** {media:.2f}")
-# st.write(f"📈 **Desvio padrão:** {desvio:.2f}")
-#
-# # Arredondar as notas finais (caso tenham decimais) para agrupar por nota
-# df['Nota Arredondada'] = df['Nota Final'].round(0)
-#
-# # Contar a quantidade de alunos por nota arredondada
-# notas_contagem = df['Nota Arredondada'].value_counts().sort_index()
-# df_notas = notas_contagem.reset_index()
-# df_notas.columns = ['Nota', 'Quantidade']
-#
-# # Criar gráfico de barras com contagem por nota
-# fig2 = px.bar(
-#     df_notas,
-#     x='Nota',
-#     y='Quantidade',
-#     title='Distribuição de Notas Finais',
-#     labels={'Nota': 'Nota Final', 'Quantidade': 'Número de Alunos'}
-# )
-#
-# # Exibir gráfico
-# st.plotly_chart(fig2)
-#
-#
-# # Considerar apenas os alunos que têm nota final válida
-# df_validos = df[df['Nota Final'].notna()]
-#
-# total_validos = len(df_validos)
-# acima_media = (df_validos['Nota Final'] >= 6).sum()
-# abaixo_media = (df_validos['Nota Final'] < 6).sum()
-#
-# # Cálculo com base no total válido
-# st.write(f"✅ Alunos com nota ≥ 6: {acima_media} ({acima_media / total_validos:.1%})")
-# st.write(f"❌ Alunos com nota < 6: {abaixo_media} ({abaixo_media / total_validos:.1%})")
+# Gráfico principal
+st.subheader("📊 Gráfico de Notas")
+if tipo == "Todas":
+    df_melt = df[['Nome', col_av, col_rec]].melt(id_vars='Nome', var_name='Tipo', value_name='Nota')
+    fig_comparativo = px.bar(df_melt, x='Nome', y='Nota', color='Tipo', barmode='group',
+                             title=f"Comparativo Avaliação e Recuperação - Prova {prova} ({disciplina_nome})")
+    fig_comparativo.update_layout(xaxis_tickangle=-90, yaxis=dict(range=[0, 10]))
+    st.plotly_chart(fig_comparativo, use_container_width=True)
 
-df = pd.DataFrame(dados)
+    # Gráfico nota final
+    df_final = df[df[col_final].notna()].copy()
+    df_final['Cor'] = df_final[col_final].apply(lambda x: 'blue' if x >= 6 else 'red')
+    df_final = df_final.sort_values(by='Nome')
+    fig_final = px.bar(df_final, x='Nome', y=col_final, color='Cor',
+                       color_discrete_map={'blue': 'blue', 'red': 'red'},
+                       title=f"Nota Final - Prova {prova} ({disciplina_nome})",
+                       category_orders={"Nome": sorted(df_final['Nome'].unique())})
+    fig_final.update_layout(xaxis_tickangle=-90, yaxis=dict(range=[0, 10]), showlegend=False)
+    st.plotly_chart(fig_final, use_container_width=True)
+else:
+    coluna = col_av if tipo == "Apenas Avaliação" else col_rec if tipo == "Apenas Recuperação" else col_final
+    df_grafico = df[df[coluna].notna()].copy()
+    df_grafico['Cor'] = df_grafico[coluna].apply(lambda x: 'blue' if x >= 6 else 'red')
+    df_grafico = df_grafico.sort_values(by='Nome')
+    fig = px.bar(df_grafico, x='Nome', y=coluna, color='Cor',
+                 color_discrete_map={'blue': 'blue', 'red': 'red'},
+                 title=f"{coluna} - Prova {prova} ({disciplina_nome})",
+                 category_orders={"Nome": sorted(df_grafico['Nome'].unique())})
+    fig.update_layout(xaxis_tickangle=-90, yaxis=dict(range=[0, 10]), showlegend=False)
+    st.plotly_chart(fig, use_container_width=True)
 
-# Calcular nota final
-df['Nota Final'] = df[['Avaliação 01', 'Recuperação 01']].max(axis=1)
+# Ausências
+if tipo == "Apenas Avaliação":
+    st.subheader(f"🚫 Alunos que não fizeram a {col_av}")
+    ausentes = df[df[col_av].isna()]['Nome']
+    if not ausentes.empty:
+        for nome in ausentes:
+            st.markdown(f"- {nome}")
+    else:
+        st.success("Todos os alunos fizeram a avaliação.")
+elif tipo == "Apenas Recuperação":
+    st.subheader(f"🚫 Alunos que não fizeram a {col_rec}")
+    df_rec = df[df[col_rec].isna()]
+    if df_rec.empty:
+        st.success("Todos os alunos fizeram a recuperação.")
+    else:
+        for _, row in df_rec.iterrows():
+            if pd.notna(row[col_av]) and row[col_av] == 10:
+                st.markdown(f"- {row['Nome']} (dispensado - NOTA 10)")
+            else:
+                st.markdown(f"- {row['Nome']}")
 
-# Criar coluna de cor para gráfico
-df['Cor'] = df['Nota Final'].apply(lambda nota: 'red' if nota < 6 else 'blue')
-
-# Painel
-st.title("📊 Painel de Desempenho Acadêmico")
-
-st.subheader("📄 Tabela de Notas Finais")
-# Para a tabela começar a contar na linha 1 e não 0
-df= df.reset_index(drop=True)
-df.index = df.index + 1
-
-st.dataframe(df[['Nome', 'Avaliação 01', 'Recuperação 01', 'Nota Final']])
-
-# Ordena o DataFrame por nome
-df_ordenado = df.sort_values(by='Nome')
-
-# Gráfico 1 - Nota por aluno (com ordem alfabética real)
-st.subheader("📈 Nota Final por Aluno (cores indicam < ou ≥ 6)")
-fig1 = px.bar(
-    df_ordenado,
-    x='Nome',
-    y='Nota Final',
-    color='Cor',
-    color_discrete_map={'red': 'red', 'blue': 'blue'},
-    title='Notas Finais por Estudante',
-    labels={'Nota Final': 'Nota'},
-    category_orders={'Nome': df_ordenado['Nome'].tolist()}  # <- Força a ordem alfabética no eixo X
-)
-fig1.update_layout(xaxis_tickangle=-90, yaxis=dict(range=[0, 10]), showlegend=False)
-st.plotly_chart(fig1)
-
-# Estatísticas básicas
+# Estatísticas
 st.subheader("📊 Estatísticas da Turma")
-df_validos = df[df['Nota Final'].notna()]
-media = df_validos['Nota Final'].mean()
-desvio = df_validos['Nota Final'].std()
+col_estat = col_av if tipo == "Apenas Avaliação" else col_rec if tipo == "Apenas Recuperação" else col_final
+df_estat = df[df[col_estat].notna()].copy()
+media = df_estat[col_estat].mean()
+desvio = df_estat[col_estat].std()
+acima = (df_estat[col_estat] >= 6).sum()
+abaixo = (df_estat[col_estat] < 6).sum()
+total = len(df_estat)
 
 st.write(f"**Média da turma:** {media:.2f}")
 st.write(f"**Desvio padrão:** {desvio:.2f}")
-
-# Percentual acima/abaixo da média
-acima_media = (df_validos['Nota Final'] >= 6).sum()
-abaixo_media = (df_validos['Nota Final'] < 6).sum()
-total_validos = len(df_validos)
-
-st.markdown("### ✅❌ Desempenho em relação à média")
-st.markdown(f"✅ Alunos com nota ≥ 6: **{acima_media} ({acima_media / total_validos:.1%})**")
-st.markdown(f"❌ Alunos com nota < 6: **{abaixo_media} ({abaixo_media / total_validos:.1%})**")
+st.markdown(f"✅ Alunos com nota ≥ 6: **{acima} ({acima / total:.1%})**")
+st.markdown(f"❌ Alunos com nota < 6: **{abaixo} ({abaixo / total:.1%})**")
 
 # Ranking
 st.subheader("🏅 Ranking de Notas")
-# Ordenar por nota decrescente
-df_ranking = df_validos.sort_values(by='Nota Final', ascending=False)[['Nome', 'Nota Final']]
-# Adicionar a coluna 'Posição' iniciando em 1
-df_ranking.insert(0, 'Posição', range(1, len(df_ranking) + 1))
-# st.dataframe(df_ranking.reset_index(drop=True))
-st.dataframe(df_ranking)
+ranking = df_estat.sort_values(by=col_estat, ascending=False)[['Nome', col_estat]]
+ranking.insert(0, "Posição", range(1, len(ranking) + 1))
+st.dataframe(ranking)
 
-# Gráfico 2 - Distribuição de notas
-st.subheader("📊 Distribuição de Notas")
-df_validos['Nota Arredondada'] = df_validos['Nota Final'].round(0)
-notas_contagem = df_validos['Nota Arredondada'].value_counts().sort_index()
-df_nota_freq = notas_contagem.reset_index()
-df_nota_freq.columns = ['Nota', 'Quantidade']
+# Distribuição das notas com passo 1 e largura igual
+st.subheader(f"📊 Distribuição das Notas - {col_estat}")
+df_dist = df_estat.copy()
+df_dist['Nota Arredondada'] = df_dist[col_estat].round(0)
+notas_possiveis = pd.Series(range(0, 11), name="Nota")
+frequencia = df_dist['Nota Arredondada'].value_counts().sort_index()
+df_freq = pd.DataFrame({'Nota': frequencia.index, 'Quantidade': frequencia.values})
+df_freq = notas_possiveis.to_frame().merge(df_freq, on='Nota', how='left').fillna(0)
+df_freq['Quantidade'] = df_freq['Quantidade'].astype(int)
 
-fig2 = px.bar(
-    df_nota_freq,
-    x='Nota',
-    y='Quantidade',
-    title='Frequência das Notas Finais',
-    labels={'Nota': 'Nota Final', 'Quantidade': 'Número de Alunos'}
+fig_dist = px.bar(df_freq, x='Nota', y='Quantidade',
+                  title=f"Distribuição das Notas - {col_estat} - Prova {prova}",
+                  labels={'Nota': 'Nota', 'Quantidade': 'Número de Alunos'},
+                  width=900)
+fig_dist.update_traces(width=0.6)
+fig_dist.update_layout(
+    xaxis=dict(tickmode='linear', tick0=0, dtick=1, range=[-0.5, 10.5]),
+    bargap=0.2
 )
-st.plotly_chart(fig2)
-
-# # Boxplot
-# st.subheader("📦 Boxplot das Notas Finais")
-# fig3 = px.box(df_validos, y='Nota Final', title='Distribuição das Notas (Boxplot)')
-# st.plotly_chart(fig3)
-
-# Verificação de desempenho da turma
-st.subheader("📏 Avaliação da Turma")
-if media >= 6:
-    st.success("🎉 A média da turma está **acima ou igual à média mínima (6.0)**.")
-else:
-    st.warning("⚠️ A média da turma está **abaixo da média mínima (6.0)**.")
+st.plotly_chart(fig_dist, use_container_width=True)
