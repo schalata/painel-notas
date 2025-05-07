@@ -3,37 +3,58 @@ import streamlit as st
 import plotly.express as px
 
 st.set_page_config(page_title="Painel Acadêmico", layout="wide")
-st.title("📚 Painel de Desempenho por Prova")
+st.title("\U0001F4DA Painel de Desempenho por Prova")
 
-# Disciplinas disponíveis
-disciplinas = {
-    "Algoritmos e Lógica de Programação": "INF_ALP_2025.xlsx",
-    "Estruturas de Dados": "CST_EDA_2025.xlsx"
+# -------------------------
+# CURSO → UC → ARQUIVO
+# -------------------------
+cursos = {
+    "Curso Técnico em Informática Integrado ao Ensino Médio": {
+        "Algoritmos e Lógica de Programação": "INF_ALP_2025.xlsx"
+    },
+    "Curso Superior de Tecnologia em Sistemas para Internet": {
+        "Estruturas de Dados": "CST_EDA_2025.xlsx"
+    }
 }
 
-# Sidebar de controle
+# Sidebar - Escolha do Curso e UC
 st.sidebar.header("⚙️ Configurações")
-disciplina_nome = st.sidebar.selectbox("Selecione a disciplina:", list(disciplinas.keys()))
-arquivo_excel = disciplinas[disciplina_nome]
+curso_selecionado = st.sidebar.selectbox("Selecione o curso:", list(cursos.keys()))
+ucs_disponiveis = cursos[curso_selecionado]
+uc_selecionada = st.sidebar.selectbox("Selecione a unidade curricular:", list(ucs_disponiveis.keys()))
+arquivo_excel = ucs_disponiveis[uc_selecionada]
 
-# Carregamento dos dados
+# -------------------------
+# Carregamento e processamento
+# -------------------------
 df = pd.read_excel(arquivo_excel)
 
-# Cálculo das notas finais para cada prova
+# Detecta quais provas estão presentes
+provas_disponiveis = []
 for i in range(1, 5):
     pi = f"0{i}"
-    df[f"Nota Final {pi}"] = df[[f"Avaliação {pi}", f"Recuperação {pi}"]].max(axis=1)
+    if f"Avaliação {pi}" in df.columns:
+        provas_disponiveis.append(pi)
 
-# Seleção da prova e tipo
-prova = st.sidebar.selectbox("Selecione a prova:", ["01", "02", "03", "04"])
+if not provas_disponiveis:
+    st.error("⚠️ Nenhuma prova encontrada na planilha.")
+    st.stop()
+
+# Escolha da prova e tipo de exibição
+prova = st.sidebar.selectbox("Selecione a prova:", provas_disponiveis)
 tipo = st.sidebar.radio("Tipo de nota a exibir:", ("Apenas Avaliação", "Apenas Recuperação", "Apenas Nota Final", "Todas"))
 
-# Colunas correspondentes
 col_av = f"Avaliação {prova}"
 col_rec = f"Recuperação {prova}"
 col_final = f"Nota Final {prova}"
 
-# Tabela de notas
+# Calcula a nota final da prova selecionada
+if col_final not in df.columns:
+    df[col_final] = df[[col_av, col_rec]].max(axis=1)
+
+# -------------------------
+# TABELA DE NOTAS
+# -------------------------
 st.subheader("📄 Tabela de Notas")
 colunas_tabela = ['Nome']
 if tipo == "Apenas Avaliação":
@@ -46,41 +67,44 @@ else:
     colunas_tabela += [col_av, col_rec, col_final]
 
 df_tabela = df[colunas_tabela].copy()
-df_tabela.index = df_tabela.index + 1
+df_tabela.index += 1
 st.dataframe(df_tabela)
 
-# Gráfico principal
-st.subheader("📊 Gráfico de Notas")
+# -------------------------
+# GRÁFICOS
+# -------------------------
+st.subheader("📈 Gráfico de Notas")
 if tipo == "Todas":
     df_melt = df[['Nome', col_av, col_rec]].melt(id_vars='Nome', var_name='Tipo', value_name='Nota')
-    fig_comparativo = px.bar(df_melt, x='Nome', y='Nota', color='Tipo', barmode='group',
-                             title=f"Comparativo Avaliação e Recuperação - Prova {prova} ({disciplina_nome})")
-    fig_comparativo.update_layout(xaxis_tickangle=-90, yaxis=dict(range=[0, 10]))
-    st.plotly_chart(fig_comparativo, use_container_width=True)
+    fig_duplo = px.bar(df_melt, x='Nome', y='Nota', color='Tipo', barmode='group',
+                       title=f"Comparativo Avaliação e Recuperação - Prova {prova} ({uc_selecionada})")
+    fig_duplo.update_layout(xaxis_tickangle=-90, yaxis=dict(range=[0, 10]))
+    st.plotly_chart(fig_duplo, use_container_width=True)
 
-    # Gráfico nota final
-    df_final = df[df[col_final].notna()].copy()
-    df_final['Cor'] = df_final[col_final].apply(lambda x: 'blue' if x >= 6 else 'red')
-    df_final = df_final.sort_values(by='Nome')
-    fig_final = px.bar(df_final, x='Nome', y=col_final, color='Cor',
+    df_validos = df[df[col_final].notna()].copy()
+    df_validos['Cor'] = df_validos[col_final].apply(lambda x: 'blue' if x >= 6 else 'red')
+    df_ordenado = df_validos.sort_values(by='Nome')
+    fig_final = px.bar(df_ordenado, x='Nome', y=col_final, color='Cor',
                        color_discrete_map={'blue': 'blue', 'red': 'red'},
-                       title=f"Nota Final - Prova {prova} ({disciplina_nome})",
-                       category_orders={"Nome": sorted(df_final['Nome'].unique())})
+                       title=f"Nota Final - Prova {prova} ({uc_selecionada})",
+                       category_orders={"Nome": sorted(df_ordenado['Nome'].unique())})
     fig_final.update_layout(xaxis_tickangle=-90, yaxis=dict(range=[0, 10]), showlegend=False)
     st.plotly_chart(fig_final, use_container_width=True)
 else:
     coluna = col_av if tipo == "Apenas Avaliação" else col_rec if tipo == "Apenas Recuperação" else col_final
-    df_grafico = df[df[coluna].notna()].copy()
-    df_grafico['Cor'] = df_grafico[coluna].apply(lambda x: 'blue' if x >= 6 else 'red')
-    df_grafico = df_grafico.sort_values(by='Nome')
-    fig = px.bar(df_grafico, x='Nome', y=coluna, color='Cor',
+    df_validos = df[df[coluna].notna()].copy()
+    df_validos['Cor'] = df_validos[coluna].apply(lambda x: 'blue' if x >= 6 else 'red')
+    df_ordenado = df_validos.sort_values(by='Nome')
+    fig = px.bar(df_ordenado, x='Nome', y=coluna, color='Cor',
                  color_discrete_map={'blue': 'blue', 'red': 'red'},
-                 title=f"{coluna} - Prova {prova} ({disciplina_nome})",
-                 category_orders={"Nome": sorted(df_grafico['Nome'].unique())})
+                 title=f"{coluna} - Prova {prova} ({uc_selecionada})",
+                 category_orders={'Nome': sorted(df_ordenado['Nome'].unique())})
     fig.update_layout(xaxis_tickangle=-90, yaxis=dict(range=[0, 10]), showlegend=False)
     st.plotly_chart(fig, use_container_width=True)
 
-# Ausências
+# -------------------------
+# AUSENTES
+# -------------------------
 if tipo == "Apenas Avaliação":
     st.subheader(f"🚫 Alunos que não fizeram a {col_av}")
     ausentes = df[df[col_av].isna()]['Nome']
@@ -90,18 +114,19 @@ if tipo == "Apenas Avaliação":
     else:
         st.success("Todos os alunos fizeram a avaliação.")
 elif tipo == "Apenas Recuperação":
-    st.subheader(f"🚫 Alunos que não fizeram a {col_rec}")
+    st.subheader(f"🚫 Alunos que não fizeram a {col_rec} (e estão abaixo da média)")
     df_rec = df[df[col_rec].isna()]
-    if df_rec.empty:
-        st.success("Todos os alunos fizeram a recuperação.")
+    df_filtrados = df_rec[df_rec[col_av] < 10]
+    df_abaixo_media = df_filtrados[df_filtrados[col_av] < 6]
+    if df_abaixo_media.empty:
+        st.success("Não há alunos abaixo da média que faltaram na recuperação.")
     else:
-        for _, row in df_rec.iterrows():
-            if pd.notna(row[col_av]) and row[col_av] == 10:
-                st.markdown(f"- {row['Nome']} (dispensado - NOTA 10)")
-            else:
-                st.markdown(f"- {row['Nome']}")
+        for nome in df_abaixo_media['Nome']:
+            st.markdown(f"- {nome}")
 
-# Estatísticas
+# -------------------------
+# ESTATÍSTICAS
+# -------------------------
 st.subheader("📊 Estatísticas da Turma")
 col_estat = col_av if tipo == "Apenas Avaliação" else col_rec if tipo == "Apenas Recuperação" else col_final
 df_estat = df[df[col_estat].notna()].copy()
@@ -113,21 +138,28 @@ total = len(df_estat)
 
 st.write(f"**Média da turma:** {media:.2f}")
 st.write(f"**Desvio padrão:** {desvio:.2f}")
-st.markdown(f"✅ Alunos com nota ≥ 6: **{acima} ({acima / total:.1%})**")
-st.markdown(f"❌ Alunos com nota < 6: **{abaixo} ({abaixo / total:.1%})**")
+if total > 0:
+    st.markdown(f"✅ Alunos com nota ≥ 6: **{acima} ({acima / total:.1%})**")
+    st.markdown(f"❌ Alunos com nota < 6: **{abaixo} ({abaixo / total:.1%})**")
+else:
+    st.warning("⚠️ Nenhuma nota válida registrada para esta prova.")
 
-# Ranking
+# -------------------------
+# RANKING
+# -------------------------
 st.subheader("🏅 Ranking de Notas")
 ranking = df_estat.sort_values(by=col_estat, ascending=False)[['Nome', col_estat]]
 ranking.insert(0, "Posição", range(1, len(ranking) + 1))
 st.dataframe(ranking)
 
-# Distribuição das notas com passo 1 e largura igual
+# -------------------------
+# DISTRIBUIÇÃO DAS NOTAS
+# -------------------------
 st.subheader(f"📊 Distribuição das Notas - {col_estat}")
-df_dist = df_estat.copy()
-df_dist['Nota Arredondada'] = df_dist[col_estat].round(0)
+df_distrib = df[df[col_estat].notna()].copy()
+df_distrib['Nota Arredondada'] = df_distrib[col_estat].round(0)
 notas_possiveis = pd.Series(range(0, 11), name="Nota")
-frequencia = df_dist['Nota Arredondada'].value_counts().sort_index()
+frequencia = df_distrib['Nota Arredondada'].value_counts().sort_index()
 df_freq = pd.DataFrame({'Nota': frequencia.index, 'Quantidade': frequencia.values})
 df_freq = notas_possiveis.to_frame().merge(df_freq, on='Nota', how='left').fillna(0)
 df_freq['Quantidade'] = df_freq['Quantidade'].astype(int)
