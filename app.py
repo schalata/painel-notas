@@ -17,6 +17,9 @@ cursos = {
         "Algoritmos e Lógica de Programação": "INF_ALP_2025.xlsx"
     },
     "Curso Superior de Tecnologia em Sistemas para Internet": {
+        "Estruturas de Dados": "CST_ATP_2025.xlsx"
+    },
+    "Curso Superior de Tecnologia em Sistemas para Internet": {
         "Estruturas de Dados": "CST_EDA_2025.xlsx"
     }
 }
