@@ -13,16 +13,15 @@ st.title("\U0001F4DA Painel de Desempenho por Prova")
 # CURSO → UC → ARQUIVO
 # -------------------------
 cursos = {
-    "Curso Técnico em Informática Integrado ao Ensino Médio": {
+    "Técnico em Informática Integrado ao Ensino Médio": {
         "Algoritmos e Lógica de Programação": "INF_ALP_2025.xlsx"
     },
-    "Curso Superior de Tecnologia em Sistemas para Internet": {
-        "Estruturas de Dados": "CST_ATP_2025.xlsx"
-    },
-    "Curso Superior de Tecnologia em Sistemas para Internet": {
+    "Superior de Tecnologia em Sistemas para Internet": {
+        "Algoritmos e Técnicas de Programação": "CST_ATP_2025.xlsx",
         "Estruturas de Dados": "CST_EDA_2025.xlsx"
     }
 }
+
 
 # Sidebar - Escolha do Curso e UC
 st.sidebar.header("⚙️ Configurações")
