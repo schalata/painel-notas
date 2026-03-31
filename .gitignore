@@ -1,4 +1,43 @@
+# Ambiente virtual
 venv/
+.venv/
+env/
+
+# Variáveis de ambiente
+.env
+.env.*
+*.env
+
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Compilações / distribuição
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Testes / cobertura
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# IDEs / editores
+.vscode/
 .idea/
-*.pyc
+*.iml
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs / temporários
+*.log
+tmp/
+temp/
+
+# Sistema
+.DS_Store
+Thumbs.db
