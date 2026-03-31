@@ -2,9 +2,13 @@
 # Painel de Desempenho por Prova - Versão 01
 # --------------------------------------------------
 
+from pathlib import Path
+
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+
+DATA_DIR = Path(__file__).resolve().parent / "dados"
 
 st.set_page_config(page_title="Painel Acadêmico", layout="wide")
 st.title("\U0001F4DA Painel de Desempenho por Prova")
@@ -34,7 +38,7 @@ arquivo_excel = ucs_disponiveis[uc_selecionada]
 # -------------------------
 # Carregamento e processamento
 # -------------------------
-df = pd.read_excel(arquivo_excel)
+df = pd.read_excel(DATA_DIR / arquivo_excel)
 
 # Detecta quais provas estão presentes
 provas_disponiveis = []
